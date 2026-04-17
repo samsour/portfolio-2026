@@ -10,8 +10,8 @@ const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "
 const silkscreen = Silkscreen({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-pixel" });
 
 export const metadata: Metadata = {
-  title: 'sam sauer — developer & photographer',
-  description: 'developer and photographer building digital products at krekeny. based in germany.',
+  title: 'sam sauer — creative developer',
+  description: 'creative developer building digital products at krekeny. based in germany.',
   generator: 'v0.app',
   icons: {
     icon: [
