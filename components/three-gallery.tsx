@@ -386,7 +386,7 @@ export function ThreeGallery() {
               </a>
               <span className="text-black/20 dark:text-white/20">·</span>
               <a
-                href="https://instagram.com/samsour"
+                href="https://instagram.com/qwerfeldein"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
@@ -395,7 +395,7 @@ export function ThreeGallery() {
               </a>
               <span className="text-black/20 dark:text-white/20">·</span>
               <a
-                href="https://linkedin.com/in/samsour"
+                href="https://linkedin.com/in/samsauer"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
@@ -413,7 +413,7 @@ export function ThreeGallery() {
               </a>
               <span className="text-black/20 dark:text-white/20">·</span>
               <a
-                href="https://tangled.com/samsour"
+                href="https://tangled.sh/@samsour.de"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
