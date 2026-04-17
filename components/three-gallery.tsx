@@ -375,25 +375,9 @@ export function ThreeGallery() {
           </div>
         </section>
 
-        {/* Currently into */}
-        <section className="flex min-h-screen w-full items-center justify-end px-6 md:px-16 lg:px-24">
-          <div ref={intoRef} className="max-w-md text-right">
-            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40" style={fadeUp(intoInView, 0)}>
-              currently into
-            </p>
-            <div className="space-y-4">
-              <p className="font-sans text-sm leading-relaxed text-black/50 dark:text-white/50 md:text-base" style={fadeUp(intoInView, 1)}>
-                self-hosting everything. returning to the nintendo ds and ipod
-                era. listening to old linkin park songs on repeat. old tech just
-                hits different.
-              </p>
-            </div>
-          </div>
-        </section>
-
         {/* What I do */}
-        <section className="flex min-h-screen w-full items-center px-6 md:px-16 lg:px-24">
-          <div className="max-w-md">
+        <section className="flex min-h-screen w-full items-center justify-end px-6 md:px-16 lg:px-24">
+          <div className="max-w-md text-right">
             <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
               what i do
             </p>
@@ -427,6 +411,22 @@ export function ThreeGallery() {
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Currently into */}
+        <section className="flex min-h-screen w-full items-center px-6 md:px-16 lg:px-24">
+          <div ref={intoRef} className="max-w-md">
+            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40" style={fadeUp(intoInView, 0)}>
+              currently into
+            </p>
+            <div className="space-y-4">
+              <p className="font-sans text-sm leading-relaxed text-black/50 dark:text-white/50 md:text-base" style={fadeUp(intoInView, 1)}>
+                self-hosting everything. returning to the nintendo ds and ipod
+                era. listening to old linkin park songs on repeat. old tech just
+                hits different.
+              </p>
             </div>
           </div>
         </section>
