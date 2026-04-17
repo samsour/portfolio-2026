@@ -1,48 +1,59 @@
-"use client"
+"use client";
 
-import { useRef, useMemo, useState, useEffect, useCallback, memo } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import * as THREE from "three"
-import Link from "next/link"
+import { useRef, useMemo, useState, useEffect, useCallback, memo } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
+import Link from "next/link";
 
 // Sparse masonry image cards - larger, fewer, more whitespace
-const ImageCard = memo(function ImageCard({ 
-  position, 
-  scale, 
+const ImageCard = memo(function ImageCard({
+  position,
+  scale,
   index,
   brightness,
-}: { 
-  position: [number, number, number]
-  scale: [number, number, number]
-  index: number
-  brightness: number
+}: {
+  position: [number, number, number];
+  scale: [number, number, number];
+  index: number;
+  brightness: number;
 }) {
-  const ref = useRef<THREE.Mesh>(null)
-  const [hovered, setHovered] = useState(false)
-  const initialPos = useRef(position)
+  const ref = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  const initialPos = useRef(position);
 
   useFrame((state) => {
-    if (!ref.current) return
+    if (!ref.current) return;
 
-    const t = state.clock.elapsedTime
+    const t = state.clock.elapsedTime;
 
     // Very subtle floating
-    ref.current.position.y = initialPos.current[1] + Math.sin(t * 0.2 + index * 0.6) * 0.04
-    ref.current.position.x = initialPos.current[0] + Math.cos(t * 0.15 + index * 0.4) * 0.02
-    
+    ref.current.position.y =
+      initialPos.current[1] + Math.sin(t * 0.2 + index * 0.6) * 0.04;
+    ref.current.position.x =
+      initialPos.current[0] + Math.cos(t * 0.15 + index * 0.4) * 0.02;
+
     // Minimal rotation
-    ref.current.rotation.y = Math.sin(t * 0.1 + index) * 0.008 + (hovered ? 0.01 : 0)
+    ref.current.rotation.y =
+      Math.sin(t * 0.1 + index) * 0.008 + (hovered ? 0.01 : 0);
 
     // Scale on hover
-    const targetScale = hovered ? 1.02 : 1
-    ref.current.scale.x = THREE.MathUtils.lerp(ref.current.scale.x, scale[0] * targetScale, 0.06)
-    ref.current.scale.y = THREE.MathUtils.lerp(ref.current.scale.y, scale[1] * targetScale, 0.06)
-  })
+    const targetScale = hovered ? 1.02 : 1;
+    ref.current.scale.x = THREE.MathUtils.lerp(
+      ref.current.scale.x,
+      scale[0] * targetScale,
+      0.06
+    );
+    ref.current.scale.y = THREE.MathUtils.lerp(
+      ref.current.scale.y,
+      scale[1] * targetScale,
+      0.06
+    );
+  });
 
   const color = useMemo(() => {
-    const gray = brightness
-    return new THREE.Color(gray, gray, gray)
-  }, [brightness])
+    const gray = brightness;
+    return new THREE.Color(gray, gray, gray);
+  }, [brightness]);
 
   return (
     <mesh
@@ -61,27 +72,27 @@ const ImageCard = memo(function ImageCard({
         metalness={0}
       />
     </mesh>
-  )
-})
+  );
+});
 
 // Very minimal particles
 const Particles = memo(function Particles({ count = 20 }: { count?: number }) {
-  const ref = useRef<THREE.Points>(null)
-  
+  const ref = useRef<THREE.Points>(null);
+
   const particles = useMemo(() => {
-    const positions = new Float32Array(count * 3)
+    const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 30
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 50
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 8
+      positions[i * 3] = (Math.random() - 0.5) * 30;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 50;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
     }
-    return positions
-  }, [count])
+    return positions;
+  }, [count]);
 
   useFrame((state) => {
-    if (!ref.current) return
-    ref.current.rotation.y = state.clock.elapsedTime * 0.008
-  })
+    if (!ref.current) return;
+    ref.current.rotation.y = state.clock.elapsedTime * 0.008;
+  });
 
   return (
     <points ref={ref}>
@@ -101,67 +112,87 @@ const Particles = memo(function Particles({ count = 20 }: { count?: number }) {
         sizeAttenuation
       />
     </points>
-  )
-})
+  );
+});
 
 // Camera controller
 function CameraController({ scrollProgress }: { scrollProgress: number }) {
-  const { camera } = useThree()
+  const { camera } = useThree();
 
   useFrame(() => {
-    const targetY = 2 - scrollProgress * 22
-    const targetZ = 10 + Math.sin(scrollProgress * Math.PI * 0.5) * 2
+    const targetY = 2 - scrollProgress * 22;
+    const targetZ = 10 + Math.sin(scrollProgress * Math.PI * 0.5) * 2;
 
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.03)
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.03)
-    camera.lookAt(0, camera.position.y - 2, 0)
-  })
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.03);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.03);
+    camera.lookAt(0, camera.position.y - 2, 0);
+  });
 
-  return null
+  return null;
 }
 
 // Sparse masonry layout - only 5 images with lots of whitespace
-const Scene = memo(function Scene({ scrollProgress }: { scrollProgress: number }) {
+const Scene = memo(function Scene({
+  scrollProgress,
+}: {
+  scrollProgress: number;
+}) {
   const cards = useMemo(() => {
     return [
-      { position: [-6, 2.5, -1] as [number, number, number], scale: [5, 3.5, 1] as [number, number, number], brightness: 0.2 },
-      { position: [5, -3, 0] as [number, number, number], scale: [4, 5.5, 1] as [number, number, number], brightness: 0.15 },
-      { position: [-4, -10, -0.5] as [number, number, number], scale: [5.5, 4, 1] as [number, number, number], brightness: 0.28 },
-      { position: [6, -16, 0] as [number, number, number], scale: [4.5, 6, 1] as [number, number, number], brightness: 0.18 },
-      { position: [-5, -22, -1] as [number, number, number], scale: [6, 4.5, 1] as [number, number, number], brightness: 0.25 },
-    ]
-  }, [])
+      {
+        position: [-6, 2.5, -1] as [number, number, number],
+        scale: [5, 3.5, 1] as [number, number, number],
+        brightness: 0.2,
+      },
+      {
+        position: [5, -3, 0] as [number, number, number],
+        scale: [4, 5.5, 1] as [number, number, number],
+        brightness: 0.15,
+      },
+      {
+        position: [-4, -10, -0.5] as [number, number, number],
+        scale: [5.5, 4, 1] as [number, number, number],
+        brightness: 0.28,
+      },
+      {
+        position: [6, -16, 0] as [number, number, number],
+        scale: [4.5, 6, 1] as [number, number, number],
+        brightness: 0.18,
+      },
+      {
+        position: [-5, -22, -1] as [number, number, number],
+        scale: [6, 4.5, 1] as [number, number, number],
+        brightness: 0.25,
+      },
+    ];
+  }, []);
 
   return (
     <>
       <ambientLight intensity={0.2} />
       <directionalLight position={[5, 10, 5]} intensity={0.4} />
-      
+
       <CameraController scrollProgress={scrollProgress} />
       <Particles count={20} />
-      
+
       {cards.map((card, i) => (
         <ImageCard key={i} {...card} index={i} />
       ))}
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -35, 0]}>
         <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial 
-          color="#000000"
-          roughness={1}
-          metalness={0}
-        />
+        <meshStandardMaterial color="#000000" roughness={1} metalness={0} />
       </mesh>
     </>
-  )
-})
+  );
+});
 
 // Canvas wrapper
 function ThreeCanvas({ scrollProgress }: { scrollProgress: number }) {
   return (
     <Canvas
-      gl={{ 
-        antialias: true, 
+      gl={{
+        antialias: true,
         alpha: false,
         powerPreference: "default",
         preserveDrawingBuffer: true,
@@ -170,40 +201,42 @@ function ThreeCanvas({ scrollProgress }: { scrollProgress: number }) {
       dpr={[1, 1.5]}
       style={{ background: "#000000" }}
       onCreated={({ gl }) => {
-        gl.setClearColor("#000000")
+        gl.setClearColor("#000000");
       }}
     >
       <fog attach="fog" args={["#000000", 12, 40]} />
       <Scene scrollProgress={scrollProgress} />
     </Canvas>
-  )
+  );
 }
 
 // Main component
 export function ThreeGallery() {
-  const [mounted, setMounted] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   const handleScroll = useCallback(() => {
     if (containerRef.current) {
-      const maxScroll = containerRef.current.scrollHeight - containerRef.current.clientHeight
-      const progress = maxScroll > 0 ? containerRef.current.scrollTop / maxScroll : 0
-      setScrollProgress(Math.min(progress, 1))
+      const maxScroll =
+        containerRef.current.scrollHeight - containerRef.current.clientHeight;
+      const progress =
+        maxScroll > 0 ? containerRef.current.scrollTop / maxScroll : 0;
+      setScrollProgress(Math.min(progress, 1));
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    const container = containerRef.current
+    const container = containerRef.current;
     if (container && mounted) {
-      container.addEventListener("scroll", handleScroll, { passive: true })
-      return () => container.removeEventListener("scroll", handleScroll)
+      container.addEventListener("scroll", handleScroll, { passive: true });
+      return () => container.removeEventListener("scroll", handleScroll);
     }
-  }, [handleScroll, mounted])
+  }, [handleScroll, mounted]);
 
   if (!mounted) {
     return (
@@ -212,18 +245,18 @@ export function ThreeGallery() {
           <div className="h-px w-12 animate-pulse bg-white/40" />
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="relative h-screen w-full">
       {/* Three.js Canvas */}
-      <div className="fixed inset-0 z-0" key="three-canvas">
+      <div className="fixed inset-0 z-0 pointer-events-none" key="three-canvas">
         <ThreeCanvas scrollProgress={scrollProgress} />
       </div>
 
       {/* HTML Content */}
-      <div 
+      <div
         ref={containerRef}
         className="relative z-10 h-screen overflow-y-auto"
         style={{ scrollBehavior: "smooth" }}
@@ -234,8 +267,17 @@ export function ThreeGallery() {
             <h1 className="mb-6 font-serif text-4xl font-normal leading-[1.1] tracking-tight text-white md:text-6xl lg:text-7xl">
               <span className="text-balance">sam sauer</span>
             </h1>
-            <p className="mx-auto max-w-md font-sans text-base leading-relaxed text-white/50 md:text-lg">
-              developer & photographer. building things at krekeny.
+            <p className="mx-auto max-w-md font-[family-name:var(--font-pixel)] text-[10px] leading-relaxed tracking-widest text-white/50">
+              developer & photographer. building things at{" "}
+              <a
+                href="https://krekeny.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/70 transition-colors hover:text-white"
+              >
+                krekeny
+              </a>
+              .
             </p>
           </div>
           <div className="absolute bottom-16 flex flex-col items-center">
@@ -253,8 +295,9 @@ export function ThreeGallery() {
               11+ years of building things
             </h2>
             <p className="font-sans text-sm leading-relaxed text-white/50 md:text-base">
-              currently running krekeny, crafting web applications and digital products. 
-              when i&apos;m not coding, you&apos;ll find me with a camera or exploring old tech.
+              currently running krekeny, crafting web applications and digital
+              products. when i&apos;m not coding, you&apos;ll find me with a
+              camera or exploring old tech.
             </p>
           </div>
         </section>
@@ -267,8 +310,9 @@ export function ThreeGallery() {
             </p>
             <div className="space-y-4">
               <p className="font-sans text-sm leading-relaxed text-white/50 md:text-base">
-                self-hosting everything. returning to the nintendo ds and ipod era. 
-                listening to old linkin park songs on repeat. old tech just hits different.
+                self-hosting everything. returning to the nintendo ds and ipod
+                era. listening to old linkin park songs on repeat. old tech just
+                hits different.
               </p>
             </div>
           </div>
@@ -282,12 +326,20 @@ export function ThreeGallery() {
             </p>
             <div className="space-y-6">
               <div>
-                <h3 className="font-serif text-xl font-normal text-white md:text-2xl">development</h3>
-                <p className="mt-1 font-sans text-sm text-white/40">react, next.js, typescript</p>
+                <h3 className="font-serif text-xl font-normal text-white md:text-2xl">
+                  development
+                </h3>
+                <p className="mt-1 font-sans text-sm text-white/40">
+                  react, next.js, typescript
+                </p>
               </div>
               <div>
-                <h3 className="font-serif text-xl font-normal text-white md:text-2xl">photography</h3>
-                <p className="mt-1 font-sans text-sm text-white/40">street, travel, moments</p>
+                <h3 className="font-serif text-xl font-normal text-white md:text-2xl">
+                  photography
+                </h3>
+                <p className="mt-1 font-sans text-sm text-white/40">
+                  street, travel, moments
+                </p>
               </div>
             </div>
           </div>
@@ -359,14 +411,20 @@ export function ThreeGallery() {
               </a>
             </div>
           </div>
-          
+
           {/* Footer */}
           <div className="absolute bottom-8 flex flex-col items-center gap-4">
             <div className="flex items-center gap-6">
-              <Link href="/trips" className="font-sans text-xs text-white/30 transition-colors hover:text-white/60">
-                trips
+              <Link
+                href="/photos"
+                className="font-sans text-xs text-white/30 transition-colors hover:text-white/60"
+              >
+                photos
               </Link>
-              <Link href="/thinking" className="font-sans text-xs text-white/30 transition-colors hover:text-white/60">
+              <Link
+                href="/thinking"
+                className="font-sans text-xs text-white/30 transition-colors hover:text-white/60"
+              >
                 thinking
               </Link>
             </div>
@@ -377,5 +435,5 @@ export function ThreeGallery() {
         </section>
       </div>
     </div>
-  )
+  );
 }

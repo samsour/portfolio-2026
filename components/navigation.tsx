@@ -17,7 +17,7 @@ export function Navigation() {
   }, [])
 
   const navItems = [
-    { label: "trips", href: "/trips" },
+    { label: "photos", href: "/photos" },
     { label: "thinking", href: "/thinking" },
   ]
 
@@ -31,7 +31,7 @@ export function Navigation() {
       >
         {/* Logo */}
         <Link href="/" className="group">
-          <span className="font-serif text-base font-normal text-white transition-opacity hover:opacity-60">
+          <span className="font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-white transition-opacity hover:opacity-60">
             samsour.de
           </span>
         </Link>
