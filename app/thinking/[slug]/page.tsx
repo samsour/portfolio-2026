@@ -1,53 +1,10 @@
 import { Navigation } from "@/components/navigation"
+import { listDocuments, getDocument } from "@/lib/atproto"
+import { RenderBlocks } from "@/components/atproto-blocks"
 import Link from "next/link"
 
-const articles: Record<string, { title: string; date: string; content: string }> = {
-  "self-hosting-everything": {
-    title: "why i self-host everything now",
-    date: "2024-12-15",
-    content: `there's something deeply satisfying about running your own servers.
-
-it started with a simple question: where does my data actually live? the answer was... everywhere. scattered across dozens of services, each with their own privacy policies and terms of service that nobody reads.
-
-so i started bringing things home. email first, then file storage, then the photo backups. it's not always easy. things break. updates need to happen at 2am sometimes. but there's a sense of ownership that comes with it.
-
-the old web had this feeling. when you visited someone's personal site, you were visiting *their* space. not a profile on someone else's platform. that's what i'm trying to recapture.
-
-is it for everyone? probably not. but if you've ever wondered what happens to your data when a service shuts down, maybe it's worth exploring.`,
-  },
-  "old-tech-new-appreciation": {
-    title: "old tech, new appreciation",
-    date: "2024-11-28",
-    content: `i found my old nintendo ds in a drawer last month. charged it up, half expecting it to be dead. the startup chime hit different.
-
-there's no notifications on a ds. no infinite scroll. no algorithm deciding what i should see next. just me and whatever game i choose to play.
-
-same with the ipod. 30gb of music i actually own. no subscription fees. no "this song is no longer available in your region." it just works.
-
-we traded simplicity for convenience. but sometimes convenience comes at a cost we don't notice until it's gone.
-
-linkin park's hybrid theory sounds exactly the same as it did in 2001 on that ipod. that's kind of beautiful.`,
-  },
-  "photography-patience": {
-    title: "photography taught me patience",
-    date: "2024-10-14",
-    content: `street photography is mostly waiting.
-
-waiting for the light to hit just right. waiting for someone to walk into frame. waiting for the moment that makes a photo feel alive.
-
-it's the opposite of how we experience most things now. instant everything. swipe, tap, done. but a good photo can't be rushed.
-
-i've stood on the same corner for an hour, watching. most of the time, nothing happens. but when it does—when all the elements align for a fraction of a second—that's when the magic happens.
-
-photography taught me to slow down. to observe. to be present in a moment instead of always chasing the next one.
-
-the camera is just a tool. patience is the real skill.`,
-  },
-}
-
 function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -55,21 +12,22 @@ function formatDate(dateStr: string) {
 }
 
 export async function generateStaticParams() {
-  return Object.keys(articles).map((slug) => ({ slug }))
+  const articles = await listDocuments()
+  return articles.map((a) => ({ slug: a.rkey }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const article = articles[slug]
+  const article = await getDocument(slug)
   return {
     title: article ? `${article.title} — sam sauer` : "thinking — sam sauer",
-    description: article?.content.slice(0, 160) || "thoughts and musings",
+    description: article?.description ?? "thoughts and musings",
   }
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const article = articles[slug]
+  const article = await getDocument(slug)
 
   if (!article) {
     return (
@@ -97,19 +55,64 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             ← back to thinking
           </Link>
           <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
-            {formatDate(article.date)}
+            {formatDate(article.publishedAt)}
           </p>
-          <h1 className="font-serif text-3xl font-normal leading-tight text-black dark:text-white md:text-4xl">
+          <h1 className="mb-4 font-serif text-3xl font-normal leading-tight text-black dark:text-white md:text-4xl">
             {article.title}
           </h1>
+          {article.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {article.tags.map((tag) => (
+                <span key={tag} className="font-[family-name:var(--font-pixel)] text-[9px] tracking-widest text-black/30 dark:text-white/30">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </header>
 
-        <div className="max-w-none">
-          {article.content.split('\n\n').map((paragraph, i) => (
-            <p key={i} className="mb-6 font-sans text-base leading-relaxed text-black/70 dark:text-white/70">
-              {paragraph}
-            </p>
-          ))}
+        <RenderBlocks blocks={article.blocks} />
+
+        <div className="mt-16 border-t border-black/10 pt-10 dark:border-white/10">
+          <p className="mb-4 font-[family-name:var(--font-pixel)] text-[9px] leading-relaxed tracking-widest text-black/30 dark:text-white/30">
+            this post is part of the atmosphere — written and published using the{" "}
+            <a
+              href="https://standard.site/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 transition-colors hover:text-black/60 dark:hover:text-white/60"
+            >
+              standard site structure
+            </a>
+            {" "}and{" "}
+            <a
+              href="https://leaflet.pub"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 transition-colors hover:text-black/60 dark:hover:text-white/60"
+            >
+              leaflet
+            </a>
+            , stored on an atproto pds.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`https://sams.leaflet.pub${article.path}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block border border-black/20 px-4 py-2 font-[family-name:var(--font-pixel)] text-[9px] tracking-widest text-black/50 transition-colors hover:border-black/50 hover:text-black dark:border-white/20 dark:text-white/50 dark:hover:border-white/50 dark:hover:text-white"
+            >
+              read on leaflet →
+            </a>
+            <a
+              href={`https://pdsls.dev/${article.uri}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block border border-black/20 px-4 py-2 font-[family-name:var(--font-pixel)] text-[9px] tracking-widest text-black/50 transition-colors hover:border-black/50 hover:text-black dark:border-white/20 dark:text-white/50 dark:hover:border-white/50 dark:hover:text-white"
+            >
+              view on pds →
+            </a>
+          </div>
         </div>
       </article>
 
