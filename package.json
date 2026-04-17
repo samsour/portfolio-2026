@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "ship": "next build && git add out/ && git commit -m 'deployment time' && git push",
     "lint": "eslint ."
   },
   "dependencies": {
