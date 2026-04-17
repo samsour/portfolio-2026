@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import Link from "next/link"
 
@@ -31,6 +32,7 @@ const trips = [
 ]
 
 export default function PhotosPage() {
+  redirect("/")
   return (
     <main className="min-h-screen bg-white dark:bg-black">
       <Navigation />

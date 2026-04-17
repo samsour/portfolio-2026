@@ -22,6 +22,21 @@ const ImageCard = memo(function ImageCard({
   const [hovered, setHovered] = useState(false);
   const initialPos = useRef(position);
 
+  useMemo(() => {
+    if (!texture.image) return;
+    const planeAspect = scale[0] / scale[1];
+    const img = texture.image as HTMLImageElement;
+    const texAspect = img.width / img.height;
+    if (texAspect > planeAspect) {
+      texture.repeat.set(planeAspect / texAspect, 1);
+      texture.offset.set((1 - planeAspect / texAspect) / 2, 0);
+    } else {
+      texture.repeat.set(1, texAspect / planeAspect);
+      texture.offset.set(0, (1 - texAspect / planeAspect) / 2);
+    }
+    texture.needsUpdate = true;
+  }, [texture, scale]);
+
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime;
@@ -33,8 +48,16 @@ const ImageCard = memo(function ImageCard({
     ref.current.rotation.y =
       Math.sin(t * 0.15 + index) * 0.015 + (hovered ? 0.01 : 0);
     const targetScale = hovered ? 1.02 : 1;
-    ref.current.scale.x = THREE.MathUtils.lerp(ref.current.scale.x, scale[0] * targetScale, 0.06);
-    ref.current.scale.y = THREE.MathUtils.lerp(ref.current.scale.y, scale[1] * targetScale, 0.06);
+    ref.current.scale.x = THREE.MathUtils.lerp(
+      ref.current.scale.x,
+      scale[0] * targetScale,
+      0.06
+    );
+    ref.current.scale.y = THREE.MathUtils.lerp(
+      ref.current.scale.y,
+      scale[1] * targetScale,
+      0.06
+    );
   });
 
   return (
@@ -46,13 +69,7 @@ const ImageCard = memo(function ImageCard({
       onPointerOut={() => setHovered(false)}
     >
       <planeGeometry args={[1, 1]} />
-      <meshStandardMaterial
-        map={texture}
-        emissive={new THREE.Color(1, 1, 1)}
-        emissiveIntensity={hovered ? 0.08 : 0}
-        roughness={0.8}
-        metalness={0}
-      />
+      <meshBasicMaterial map={texture} />
     </mesh>
   );
 });
@@ -114,22 +131,45 @@ function CameraController({ scrollProgress }: { scrollProgress: number }) {
 }
 
 // Sparse masonry layout - only 5 images with lots of whitespace
-// aspect ratios match each card's scale: [w, h]
 const TEXTURE_URLS = [
-  "https://picsum.photos/id/10/1200/840",   // landscape 5:3.5
-  "https://picsum.photos/id/29/800/1100",   // portrait  4:5.5
-  "https://picsum.photos/id/15/1100/800",   // landscape 5.5:4
-  "https://picsum.photos/id/1053/750/1000", // portrait  4.5:6
-  "https://picsum.photos/id/1011/1200/900", // landscape 6:4.5
+  "/images/london.webp",
+  "/images/symm.webp",
+  "/images/whirly.webp",
+  "/images/gtr.webp",
+  "/images/avatar-jp.webp",
 ];
 
 const CARDS = [
-  { position: [-6, 2.5, -1] as [number, number, number], scale: [5, 3.5, 1] as [number, number, number] },
-  { position: [5, -3, 0] as [number, number, number], scale: [4, 5.5, 1] as [number, number, number] },
-  { position: [-4, -10, -0.5] as [number, number, number], scale: [5.5, 4, 1] as [number, number, number] },
-  { position: [6, -16, 0] as [number, number, number], scale: [4.5, 6, 1] as [number, number, number] },
-  { position: [-8, -24, -3] as [number, number, number], scale: [6, 4.5, 1] as [number, number, number] },
+  {
+    position: [-6, 2.5, -1] as [number, number, number],
+    scale: [5, 3.5, 1] as [number, number, number],
+  },
+  {
+    position: [5, -3, 0] as [number, number, number],
+    scale: [4, 5.5, 1] as [number, number, number],
+  },
+  {
+    position: [-4, -10, -0.5] as [number, number, number],
+    scale: [5.5, 4, 1] as [number, number, number],
+  },
+  {
+    position: [6, -16, 0] as [number, number, number],
+    scale: [4.5, 6, 1] as [number, number, number],
+  },
+  {
+    position: [-8, -24, -3] as [number, number, number],
+    scale: [6, 4.5, 1] as [number, number, number],
+  },
 ];
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const Scene = memo(function Scene({
   scrollProgress,
@@ -138,13 +178,11 @@ const Scene = memo(function Scene({
   scrollProgress: number;
   isDark: boolean;
 }) {
-  const textures = useTexture(TEXTURE_URLS);
+  const shuffledUrls = useMemo(() => shuffle(TEXTURE_URLS), []);
+  const textures = useTexture(shuffledUrls);
 
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 5]} intensity={0.8} />
-
       <CameraController scrollProgress={scrollProgress} />
       <Particles count={20} />
 
@@ -154,14 +192,24 @@ const Scene = memo(function Scene({
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -35, 0]}>
         <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial color={isDark ? "#000000" : "#fafafa"} roughness={1} metalness={0} />
+        <meshStandardMaterial
+          color={isDark ? "#000000" : "#fafafa"}
+          roughness={1}
+          metalness={0}
+        />
       </mesh>
     </>
   );
 });
 
 // Canvas wrapper
-function ThreeCanvas({ scrollProgress, isDark }: { scrollProgress: number; isDark: boolean }) {
+function ThreeCanvas({
+  scrollProgress,
+  isDark,
+}: {
+  scrollProgress: number;
+  isDark: boolean;
+}) {
   const bg = isDark ? "#000000" : "#fafafa";
   return (
     <Canvas
@@ -189,7 +237,17 @@ export function ThreeGallery() {
   const [mounted, setMounted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isDark, setIsDark] = useState(true);
+  const [wdiInView, setWdiInView] = useState(false);
+  const [socialInView, setSocialInView] = useState(false);
+  const [aboutInView, setAboutInView] = useState(false);
+  const [intoInView, setIntoInView] = useState(false);
+  const [contactInView, setContactInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const wdiRef = useRef<HTMLDivElement>(null);
+  const socialRef = useRef<HTMLDivElement>(null);
+  const aboutRef = useRef<HTMLDivElement>(null);
+  const intoRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -218,6 +276,41 @@ export function ThreeGallery() {
     }
   }, [handleScroll, mounted]);
 
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+    const observe = (el: HTMLDivElement | null, cb: () => void) => {
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([e]) => {
+          if (e.isIntersecting) cb();
+        },
+        { root, threshold: 0.2 }
+      );
+      obs.observe(el);
+      return obs;
+    };
+    const o1 = observe(wdiRef.current, () => setWdiInView(true));
+    const o2 = observe(socialRef.current, () => setSocialInView(true));
+    const o3 = observe(aboutRef.current, () => setAboutInView(true));
+    const o4 = observe(intoRef.current, () => setIntoInView(true));
+    const o5 = observe(contactRef.current, () => setContactInView(true));
+    return () => {
+      o1?.disconnect();
+      o2?.disconnect();
+      o3?.disconnect();
+      o4?.disconnect();
+      o5?.disconnect();
+    };
+  }, [mounted]);
+
+  const fadeUp = (inView: boolean, i: number, base = 0) => ({
+    opacity: inView ? 1 : 0,
+    transform: inView ? "translateY(0)" : "translateY(20px)",
+    transition: "opacity 0.6s ease, transform 0.6s ease",
+    transitionDelay: `${base + i * 150}ms`,
+  });
+
   if (!mounted) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black">
@@ -244,11 +337,11 @@ export function ThreeGallery() {
         {/* Hero */}
         <section className="flex h-screen w-full flex-col items-center justify-center px-6 md:px-8">
           <div className="max-w-3xl text-center">
-            <h1 className="mb-6 font-serif text-4xl font-normal leading-[1.1] tracking-tight text-black dark:text-white md:text-6xl lg:text-7xl">
+            <h1 className="mb-6 font-serif text-4xl font-normal leading-[1.1] tracking-tight text-black dark:text-white md:text-6xl lg:text-7xl" style={fadeUp(mounted, 0, 200)}>
               <span className="text-balance">sam sauer</span>
             </h1>
-            <p className="mx-auto max-w-md font-[family-name:var(--font-pixel)] text-[10px] leading-relaxed tracking-widest text-black/50 dark:text-white/50">
-              developer & photographer. building things at{" "}
+            <p className="mx-auto max-w-md font-[family-name:var(--font-pixel)] text-[10px] leading-relaxed tracking-widest text-black/50 dark:text-white/50" style={fadeUp(mounted, 1, 200)}>
+              creative developer, passionate photographer. building things at{" "}
               <a
                 href="https://krekeny.com"
                 target="_blank"
@@ -267,14 +360,14 @@ export function ThreeGallery() {
 
         {/* About */}
         <section className="flex min-h-screen w-full items-center px-6 md:px-16 lg:px-24">
-          <div className="max-w-md">
-            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
+          <div ref={aboutRef} className="max-w-md">
+            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40" style={fadeUp(aboutInView, 0)}>
               since 2014
             </p>
-            <h2 className="mb-6 font-serif text-3xl font-normal leading-tight text-black dark:text-white md:text-4xl">
+            <h2 className="mb-6 font-serif text-3xl font-normal leading-tight text-black dark:text-white md:text-4xl" style={fadeUp(aboutInView, 1)}>
               11+ years of building things
             </h2>
-            <p className="font-sans text-sm leading-relaxed text-black/50 dark:text-white/50 md:text-base">
+            <p className="font-sans text-sm leading-relaxed text-black/50 dark:text-white/50 md:text-base" style={fadeUp(aboutInView, 2)}>
               currently running krekeny, crafting web applications and digital
               products. when i&apos;m not coding, you&apos;ll find me with a
               camera or exploring old tech.
@@ -284,12 +377,12 @@ export function ThreeGallery() {
 
         {/* Currently into */}
         <section className="flex min-h-screen w-full items-center justify-end px-6 md:px-16 lg:px-24">
-          <div className="max-w-md text-right">
-            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
+          <div ref={intoRef} className="max-w-md text-right">
+            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40" style={fadeUp(intoInView, 0)}>
               currently into
             </p>
             <div className="space-y-4">
-              <p className="font-sans text-sm leading-relaxed text-black/50 dark:text-white/50 md:text-base">
+              <p className="font-sans text-sm leading-relaxed text-black/50 dark:text-white/50 md:text-base" style={fadeUp(intoInView, 1)}>
                 self-hosting everything. returning to the nintendo ds and ipod
                 era. listening to old linkin park songs on repeat. old tech just
                 hits different.
@@ -304,103 +397,101 @@ export function ThreeGallery() {
             <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
               what i do
             </p>
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-serif text-xl font-normal text-black dark:text-white md:text-2xl">
-                  development
-                </h3>
-                <p className="mt-1 font-sans text-sm text-black/40 dark:text-white/40">
-                  react, next.js, typescript
-                </p>
-              </div>
-              <div>
-                <h3 className="font-serif text-xl font-normal text-black dark:text-white md:text-2xl">
-                  photography
-                </h3>
-                <p className="mt-1 font-sans text-sm text-black/40 dark:text-white/40">
-                  street, travel, moments
-                </p>
-              </div>
+            <div ref={wdiRef} className="space-y-6">
+              {[
+                { title: "development", sub: "frontend-first, fullstack capable. js ecosystem, 3d, ci/cd" },
+                {
+                  title: "design / ux",
+                  sub: "interfaces, systems, interactions",
+                },
+                {
+                  title: "open source & atproto",
+                  sub: "building decentralised social platforms on the atmosphere",
+                },
+                { title: "photo & videography", sub: "street, travel, moments" },
+              ].map((item, i) => (
+                <div
+                  key={item.title}
+                  style={{
+                    opacity: wdiInView ? 1 : 0,
+                    transform: wdiInView ? "translateY(0)" : "translateY(24px)",
+                    transition: "opacity 0.6s ease, transform 0.6s ease",
+                    transitionDelay: `${300 + i * 200}ms`,
+                  }}
+                >
+                  <h3 className="font-serif text-xl font-normal text-black dark:text-white md:text-2xl">
+                    {item.title}
+                  </h3>
+                  <p className="mt-1 font-sans text-sm text-black/40 dark:text-white/40">
+                    {item.sub}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Contact */}
         <section className="flex min-h-screen w-full flex-col items-center justify-center px-6 md:px-8">
-          <div className="text-center">
-            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
+          <div ref={contactRef} className="text-center">
+            <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40" style={fadeUp(contactInView, 0)}>
               say hi
             </p>
-            <h2 className="mb-4 font-serif text-3xl font-normal text-black dark:text-white md:text-5xl">
+            <h2 className="mb-4 font-serif text-3xl font-normal text-black dark:text-white md:text-5xl" style={fadeUp(contactInView, 1)}>
               want to make something cool?
             </h2>
-            <p className="mb-10 font-sans text-sm text-black/40 dark:text-white/40 md:text-base">
+            <p className="mb-10 font-sans text-sm text-black/40 dark:text-white/40 md:text-base" style={fadeUp(contactInView, 2)}>
               always open to interesting projects and good conversations.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
-              <a
-                href="mailto:hi@samsour.de"
-                className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
-              >
-                email
-              </a>
-              <span className="text-black/20 dark:text-white/20">·</span>
-              <a
-                href="https://github.com/samsour"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
-              >
-                github
-              </a>
-              <span className="text-black/20 dark:text-white/20">·</span>
-              <a
-                href="https://instagram.com/qwerfeldein"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
-              >
-                instagram
-              </a>
-              <span className="text-black/20 dark:text-white/20">·</span>
-              <a
-                href="https://linkedin.com/in/samsauer"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
-              >
-                linkedin
-              </a>
-              <span className="text-black/20 dark:text-white/20">·</span>
-              <a
-                href="https://bsky.app/profile/samsour.de"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
-              >
-                bluesky
-              </a>
-              <span className="text-black/20 dark:text-white/20">·</span>
-              <a
-                href="https://tangled.sh/@samsour.de"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
-              >
-                tangled
-              </a>
+            <div
+              ref={socialRef}
+              className="flex flex-wrap items-center justify-center gap-6 md:gap-8"
+            >
+              {[
+                { label: "email", href: "mailto:hi@samsour.de" },
+                { label: "github", href: "https://github.com/samsour" },
+                {
+                  label: "instagram",
+                  href: "https://instagram.com/qwerfeldein",
+                },
+                { label: "linkedin", href: "https://linkedin.com/in/samsauer" },
+                {
+                  label: "bluesky",
+                  href: "https://bsky.app/profile/samsour.de",
+                },
+                { label: "tangled", href: "https://tangled.sh/@samsour.de" },
+              ].map((link, i) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target={link.href.startsWith("mailto") ? undefined : "_blank"}
+                  rel={
+                    link.href.startsWith("mailto")
+                      ? undefined
+                      : "noopener noreferrer"
+                  }
+                  className="font-sans text-sm text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
+                  style={{
+                    opacity: socialInView ? 1 : 0,
+                    transform: socialInView
+                      ? "translateX(0)"
+                      : "translateX(-16px)",
+                    transition: "opacity 0.5s ease, transform 0.5s ease",
+                    transitionDelay: `${i * 80}ms`,
+                  }}
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
           </div>
 
           {/* Footer */}
           <div className="absolute bottom-8 flex flex-col items-center gap-4">
             <div className="flex items-center gap-6">
-              <Link
-                href="/photos"
-                className="font-sans text-xs text-black/30 transition-colors hover:text-black/60 dark:text-white/30 dark:hover:text-white/60"
-              >
+              <span className="cursor-not-allowed font-sans text-xs text-black/15 line-through dark:text-white/15">
                 photos
-              </Link>
+              </span>
               <Link
                 href="/thinking"
                 className="font-sans text-xs text-black/30 transition-colors hover:text-black/60 dark:text-white/30 dark:hover:text-white/60"

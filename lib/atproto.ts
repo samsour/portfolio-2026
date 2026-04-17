@@ -1,5 +1,7 @@
 const DID = "did:plc:vmqt4a4pf5jxvtalzjz2zsqk"
 const COLLECTION = "site.standard.document"
+const PUBLICATION_COLLECTION = "site.standard.publication"
+const PUBLICATION_RKEY = "3mf7sgz5ils2n"
 
 // Resolve PDS endpoint from DID via the PLC directory
 async function resolvePds(did: string): Promise<string> {
@@ -80,4 +82,18 @@ export async function getDocument(rkey: string): Promise<ATProtoDocument | null>
   if (!res.ok) return null
   const record = await res.json()
   return parseRecord(record)
+}
+
+export async function getPublicationDescription(): Promise<string | null> {
+  try {
+    const pds = await resolvePds(DID)
+    const url = `${pds}/xrpc/com.atproto.repo.getRecord?repo=${DID}&collection=${PUBLICATION_COLLECTION}&rkey=${PUBLICATION_RKEY}`
+    const res = await fetch(url, { next: { revalidate: 86400 } })
+    if (!res.ok) return null
+    const record = await res.json()
+    const value = record.value as Record<string, unknown>
+    return (value.description ?? value.tagline ?? value.subtitle ?? null) as string | null
+  } catch {
+    return null
+  }
 }

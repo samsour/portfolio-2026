@@ -17,8 +17,8 @@ export function Navigation() {
   }, [])
 
   const navItems = [
-    { label: "photos", href: "/photos" },
-    { label: "thinking", href: "/thinking" },
+    { label: "photos", href: "/photos", disabled: true },
+    { label: "thinking", href: "/thinking", disabled: false },
   ]
 
   return (
@@ -38,15 +38,24 @@ export function Navigation() {
 
         {/* Desktop Menu */}
         <div className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="font-sans text-xs tracking-[0.15em] text-black/50 transition-colors hover:text-black dark:text-white/50 dark:hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) =>
+            item.disabled ? (
+              <span
+                key={item.label}
+                className="cursor-not-allowed font-sans text-xs tracking-[0.15em] text-black/25 line-through dark:text-white/25"
+              >
+                {item.label}
+              </span>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="font-sans text-xs tracking-[0.15em] text-black/50 transition-colors hover:text-black dark:text-white/50 dark:hover:text-white"
+              >
+                {item.label}
+              </Link>
+            )
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -77,21 +86,35 @@ export function Navigation() {
           menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
       >
-        {navItems.map((item, i) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            onClick={() => setMenuOpen(false)}
-            className="font-serif text-2xl font-normal text-black transition-opacity hover:opacity-60 dark:text-white"
-            style={{
-              transitionDelay: menuOpen ? `${i * 75}ms` : "0ms",
-              transform: menuOpen ? "translateY(0)" : "translateY(15px)",
-              opacity: menuOpen ? 1 : 0,
-            }}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {navItems.map((item, i) =>
+          item.disabled ? (
+            <span
+              key={item.label}
+              className="font-serif text-2xl font-normal text-black/25 line-through dark:text-white/25"
+              style={{
+                transitionDelay: menuOpen ? `${i * 75}ms` : "0ms",
+                transform: menuOpen ? "translateY(0)" : "translateY(15px)",
+                opacity: menuOpen ? 1 : 0,
+              }}
+            >
+              {item.label}
+            </span>
+          ) : (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={() => setMenuOpen(false)}
+              className="font-serif text-2xl font-normal text-black transition-opacity hover:opacity-60 dark:text-white"
+              style={{
+                transitionDelay: menuOpen ? `${i * 75}ms` : "0ms",
+                transform: menuOpen ? "translateY(0)" : "translateY(15px)",
+                opacity: menuOpen ? 1 : 0,
+              }}
+            >
+              {item.label}
+            </Link>
+          )
+        )}
       </div>
     </>
   )
