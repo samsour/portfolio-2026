@@ -128,7 +128,7 @@ const CARDS = [
   { position: [5, -3, 0] as [number, number, number], scale: [4, 5.5, 1] as [number, number, number] },
   { position: [-4, -10, -0.5] as [number, number, number], scale: [5.5, 4, 1] as [number, number, number] },
   { position: [6, -16, 0] as [number, number, number], scale: [4.5, 6, 1] as [number, number, number] },
-  { position: [-5, -22, -1] as [number, number, number], scale: [6, 4.5, 1] as [number, number, number] },
+  { position: [-8, -24, -3] as [number, number, number], scale: [6, 4.5, 1] as [number, number, number] },
 ];
 
 const Scene = memo(function Scene({
