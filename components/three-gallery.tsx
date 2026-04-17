@@ -2,6 +2,7 @@
 
 import { useRef, useMemo, useState, useEffect, useCallback, memo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import Link from "next/link";
 
@@ -10,14 +11,12 @@ const ImageCard = memo(function ImageCard({
   position,
   scale,
   index,
-  brightness,
-  isDark,
+  texture,
 }: {
   position: [number, number, number];
   scale: [number, number, number];
   index: number;
-  brightness: number;
-  isDark: boolean;
+  texture: THREE.Texture;
 }) {
   const ref = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -25,37 +24,18 @@ const ImageCard = memo(function ImageCard({
 
   useFrame((state) => {
     if (!ref.current) return;
-
     const t = state.clock.elapsedTime;
-
-    // Very subtle floating
     ref.current.position.y =
-      initialPos.current[1] + Math.sin(t * 0.2 + index * 0.6) * 0.04;
+      initialPos.current[1] + Math.sin(t * 0.4 + index * 0.9) * 0.2;
     ref.current.position.x =
-      initialPos.current[0] + Math.cos(t * 0.15 + index * 0.4) * 0.02;
-
-    // Minimal rotation
+      initialPos.current[0] + Math.cos(t * 0.25 + index * 0.7) * 0.08;
+    ref.current.rotation.z = Math.sin(t * 0.3 + index * 1.1) * 0.025;
     ref.current.rotation.y =
-      Math.sin(t * 0.1 + index) * 0.008 + (hovered ? 0.01 : 0);
-
-    // Scale on hover
+      Math.sin(t * 0.15 + index) * 0.015 + (hovered ? 0.01 : 0);
     const targetScale = hovered ? 1.02 : 1;
-    ref.current.scale.x = THREE.MathUtils.lerp(
-      ref.current.scale.x,
-      scale[0] * targetScale,
-      0.06
-    );
-    ref.current.scale.y = THREE.MathUtils.lerp(
-      ref.current.scale.y,
-      scale[1] * targetScale,
-      0.06
-    );
+    ref.current.scale.x = THREE.MathUtils.lerp(ref.current.scale.x, scale[0] * targetScale, 0.06);
+    ref.current.scale.y = THREE.MathUtils.lerp(ref.current.scale.y, scale[1] * targetScale, 0.06);
   });
-
-  const color = useMemo(() => {
-    const gray = isDark ? brightness : 1 - brightness;
-    return new THREE.Color(gray, gray, gray);
-  }, [brightness, isDark]);
 
   return (
     <mesh
@@ -67,10 +47,10 @@ const ImageCard = memo(function ImageCard({
     >
       <planeGeometry args={[1, 1]} />
       <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={hovered ? 0.12 : 0.03}
-        roughness={0.5}
+        map={texture}
+        emissive={new THREE.Color(1, 1, 1)}
+        emissiveIntensity={hovered ? 0.08 : 0}
+        roughness={0.8}
         metalness={0}
       />
     </mesh>
@@ -125,8 +105,8 @@ function CameraController({ scrollProgress }: { scrollProgress: number }) {
     const targetY = 2 - scrollProgress * 22;
     const targetZ = 10 + Math.sin(scrollProgress * Math.PI * 0.5) * 2;
 
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.03);
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.03);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.1);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.1);
     camera.lookAt(0, camera.position.y - 2, 0);
   });
 
@@ -134,6 +114,23 @@ function CameraController({ scrollProgress }: { scrollProgress: number }) {
 }
 
 // Sparse masonry layout - only 5 images with lots of whitespace
+// aspect ratios match each card's scale: [w, h]
+const TEXTURE_URLS = [
+  "https://picsum.photos/id/10/1200/840",   // landscape 5:3.5
+  "https://picsum.photos/id/29/800/1100",   // portrait  4:5.5
+  "https://picsum.photos/id/15/1100/800",   // landscape 5.5:4
+  "https://picsum.photos/id/1053/750/1000", // portrait  4.5:6
+  "https://picsum.photos/id/1011/1200/900", // landscape 6:4.5
+];
+
+const CARDS = [
+  { position: [-6, 2.5, -1] as [number, number, number], scale: [5, 3.5, 1] as [number, number, number] },
+  { position: [5, -3, 0] as [number, number, number], scale: [4, 5.5, 1] as [number, number, number] },
+  { position: [-4, -10, -0.5] as [number, number, number], scale: [5.5, 4, 1] as [number, number, number] },
+  { position: [6, -16, 0] as [number, number, number], scale: [4.5, 6, 1] as [number, number, number] },
+  { position: [-5, -22, -1] as [number, number, number], scale: [6, 4.5, 1] as [number, number, number] },
+];
+
 const Scene = memo(function Scene({
   scrollProgress,
   isDark,
@@ -141,46 +138,18 @@ const Scene = memo(function Scene({
   scrollProgress: number;
   isDark: boolean;
 }) {
-  const cards = useMemo(() => {
-    return [
-      {
-        position: [-6, 2.5, -1] as [number, number, number],
-        scale: [5, 3.5, 1] as [number, number, number],
-        brightness: 0.2,
-      },
-      {
-        position: [5, -3, 0] as [number, number, number],
-        scale: [4, 5.5, 1] as [number, number, number],
-        brightness: 0.15,
-      },
-      {
-        position: [-4, -10, -0.5] as [number, number, number],
-        scale: [5.5, 4, 1] as [number, number, number],
-        brightness: 0.28,
-      },
-      {
-        position: [6, -16, 0] as [number, number, number],
-        scale: [4.5, 6, 1] as [number, number, number],
-        brightness: 0.18,
-      },
-      {
-        position: [-5, -22, -1] as [number, number, number],
-        scale: [6, 4.5, 1] as [number, number, number],
-        brightness: 0.25,
-      },
-    ];
-  }, []);
+  const textures = useTexture(TEXTURE_URLS);
 
   return (
     <>
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[5, 10, 5]} intensity={0.4} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 10, 5]} intensity={0.8} />
 
       <CameraController scrollProgress={scrollProgress} />
       <Particles count={20} />
 
-      {cards.map((card, i) => (
-        <ImageCard key={i} {...card} index={i} isDark={isDark} />
+      {CARDS.map((card, i) => (
+        <ImageCard key={i} {...card} index={i} texture={textures[i]} />
       ))}
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -35, 0]}>
