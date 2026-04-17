@@ -1,12 +1,11 @@
 import { Navigation } from "@/components/navigation"
 import Link from "next/link"
 
-// This will be replaced with your actual article content (probably from MDX or a CMS)
 const articles: Record<string, { title: string; date: string; content: string }> = {
   "self-hosting-everything": {
     title: "why i self-host everything now",
     date: "2024-12-15",
-    content: `there's something deeply satisfying about running your own servers. 
+    content: `there's something deeply satisfying about running your own servers.
 
 it started with a simple question: where does my data actually live? the answer was... everywhere. scattered across dozens of services, each with their own privacy policies and terms of service that nobody reads.
 
@@ -74,12 +73,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   if (!article) {
     return (
-      <main className="min-h-screen bg-black">
+      <main className="min-h-screen bg-white dark:bg-black">
         <Navigation />
         <div className="flex min-h-screen items-center justify-center px-6">
           <div className="text-center">
-            <h1 className="mb-4 font-serif text-2xl text-white">article not found</h1>
-            <Link href="/thinking" className="font-sans text-sm text-white/50 transition-colors hover:text-white">
+            <h1 className="mb-4 font-serif text-2xl text-black dark:text-white">article not found</h1>
+            <Link href="/thinking" className="font-sans text-sm text-black/50 transition-colors hover:text-black dark:text-white/50 dark:hover:text-white">
               back to thinking
             </Link>
           </div>
@@ -89,37 +88,36 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   }
 
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-white dark:bg-black">
       <Navigation />
-      
+
       <article className="mx-auto max-w-2xl px-6 pb-24 pt-32">
         <header className="mb-12">
-          <Link href="/thinking" className="mb-8 inline-block font-sans text-xs text-white/30 transition-colors hover:text-white/60">
+          <Link href="/thinking" className="mb-8 inline-block font-sans text-xs text-black/30 transition-colors hover:text-black/60 dark:text-white/30 dark:hover:text-white/60">
             ← back to thinking
           </Link>
-          <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-white/40">
+          <p className="mb-4 font-[family-name:var(--font-pixel)] text-[10px] tracking-widest text-black/40 dark:text-white/40">
             {formatDate(article.date)}
           </p>
-          <h1 className="font-serif text-3xl font-normal leading-tight text-white md:text-4xl">
+          <h1 className="font-serif text-3xl font-normal leading-tight text-black dark:text-white md:text-4xl">
             {article.title}
           </h1>
         </header>
 
-        <div className="prose prose-invert max-w-none">
+        <div className="max-w-none">
           {article.content.split('\n\n').map((paragraph, i) => (
-            <p key={i} className="mb-6 font-sans text-base leading-relaxed text-white/70">
+            <p key={i} className="mb-6 font-sans text-base leading-relaxed text-black/70 dark:text-white/70">
               {paragraph}
             </p>
           ))}
         </div>
       </article>
 
-      {/* Footer */}
       <footer className="flex items-center justify-between px-6 py-6 md:px-12">
-        <Link href="/thinking" className="font-sans text-xs text-white/30 transition-colors hover:text-white/60">
+        <Link href="/thinking" className="font-sans text-xs text-black/30 transition-colors hover:text-black/60 dark:text-white/30 dark:hover:text-white/60">
           all articles
         </Link>
-        <p className="font-sans text-xs text-white/20">
+        <p className="font-sans text-xs text-black/20 dark:text-white/20">
           © {new Date().getFullYear()}
         </p>
       </footer>
